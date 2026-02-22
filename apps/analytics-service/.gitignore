@@ -1,0 +1,32 @@
+# --- Segurança (CRÍTICO) ---
+# Ignora arquivos de variáveis de ambiente com senhas
+.env
+.env.*
+
+# --- Go ---
+# Ignora o binário compilado (se rodar go build localmente)
+auth-service
+auth-service.exe
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Diretório de dependências (se usar vendorização)
+vendor/
+
+# --- IDEs e Editores ---
+# VS Code
+.vscode/
+# IntelliJ / GoLand
+.idea/
+
+# --- Sistema Operacional ---
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+# Ignora dumps se o container crashar (opcional)
+docker-compose.override.yml

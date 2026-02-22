@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  flag-service:
+    build: .
+    container_name: flag-service
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      - PORT=${PORT}
+      # Monta a URL do banco usando as variáveis do .env
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+    depends_on:
+      - postgres-flags
+    networks:
+      - app-network
+
+  postgres-flags:
+    image: postgres:15-alpine
+    container_name: postgres-flags
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      # Mapeia para uma porta externa diferente (5433) para não conflitar 
+      # com o banco do auth-service se rodar na mesma máquina local
+      - "5433:5432"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_flags_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  postgres_flags_data:
+
+networks:
+  app-network:
+    driver: bridge

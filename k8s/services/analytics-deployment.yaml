@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: evaluation-service
+  namespace: togglemaster
+  labels:
+    app: evaluation-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: evaluation-service
+  template:
+    metadata:
+      labels:
+        app: evaluation-service
+    spec:
+      containers:
+      - name: evaluation-service
+        image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/evaluation-service:latest
+        imagePullPolicy: Always
+        
+        # --- CORREÇÃO DE PORTA (O Log disse 8004) ---
+        ports:
+        - containerPort: 8004 
+          name: http
+
+        env:
+        # --- Variáveis de Banco ---
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: evaluation-cache
+              key: DB_HOST
+              optional: true 
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: evaluation-cache
+              key: DB_USER
+              optional: true
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: evaluation-cache
+              key: DB_PASS
+              optional: true
+
+        # --- Variáveis do REDIS ---
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: evaluation-cache
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            secretKeyRef:
+              name: evaluation-cache
+              key: REDIS_PORT
+        - name: REDIS_URL
+          value: "rediss://\$(REDIS_HOST):\$(REDIS_PORT)"
+
+        # --- CORREÇÃO DO SQS (Para sumir o aviso) ---
+        - name: AWS_REGION
+          value: "us-east-2"
+        - name: AWS_SQS_URL
+          value: "https://sqs.us-east-2.amazonaws.com/236604670467/analytics-queue"
+
+        # --- SERVIÇOS ---
+        - name: FLAG_SERVICE_URL
+          value: "http://flag-service"
+        - name: TARGETING_SERVICE_URL
+          value: "http://targeting-service"
+
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
+          limits:
+            cpu: "300m"
+            memory: "128Mi"
+            
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8004  # Ajustado para 8004
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: evaluation-service
+  namespace: togglemaster
+spec:
+  type: ClusterIP
+  selector:
+    app: evaluation-service
+  ports:
+  - port: 80
+    targetPort: 8004 # Ajustado para 8004

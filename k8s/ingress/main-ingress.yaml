@@ -1,0 +1,54 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: togglemaster-ingress
+  namespace: togglemaster
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    
+    # Isso ajuda a evitar problemas de upload/body grandes
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+
+spec:
+  rules:
+    - http:
+        paths:
+          # Rota para o Evaluation Service (Caminho Quente)
+          # Ex: http://load-balancer-url/eval
+          - path: /eval
+            pathType: Prefix
+            backend:
+              service:
+                name: evaluation-service
+                port:
+                  number: 80
+
+          # Rota para o Auth Service
+          # Ex: http://load-balancer-url/auth
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
+
+          # Rota para o Flag Service (Gerenciamento)
+          # Ex: http://load-balancer-url/flags
+          - path: /flags
+            pathType: Prefix
+            backend:
+              service:
+                name: flag-service
+                port:
+                  number: 80
+
+          # Rota para o Targeting Service
+          # Ex: http://load-balancer-url/targeting
+          - path: /targeting
+            pathType: Prefix
+            backend:
+              service:
+                name: targeting-service
+                port:
+                  number: 80

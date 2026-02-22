@@ -1,0 +1,178 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # AUTH SERVICE (Go) + Banco de Dados
+  # ==========================================
+  auth-service:
+    container_name: auth-service
+    build: ./auth-service
+    ports:
+      - "${AUTH_APP_PORT}:8001"
+    environment:
+      - PORT=8001
+      - MASTER_KEY=${AUTH_MASTER_KEY}
+      # Conecta no serviço 'postgres-auth' definido abaixo
+      - DATABASE_URL=postgres://${AUTH_DB_USER}:${AUTH_DB_PASS}@postgres-auth:5432/${AUTH_DB_NAME}?sslmode=disable
+    depends_on:
+      - postgres-auth
+    networks:
+      - togglemaster-network
+
+  postgres-auth:
+    image: postgres:15-alpine
+    container_name: postgres-auth
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASS}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+    ports:
+      - "${AUTH_DB_EXT_PORT}:5432"
+    volumes:
+      # Caminho relativo à raiz para o script de init
+      - ./auth-service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - auth_db_data:/var/lib/postgresql/data
+    networks:
+      - togglemaster-network
+
+  # ==========================================
+  # FLAG SERVICE (Python) + Banco de Dados
+  # ==========================================
+  flag-service:
+    container_name: flag-service
+    build: ./flag-service
+    ports:
+      - "${FLAG_APP_PORT}:8002"
+    environment:
+      - PORT=8002
+      # Comunicação Interna: Chama o auth-service pelo nome do container
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      # Conecta no serviço 'postgres-flags' definido abaixo
+      - DATABASE_URL=postgres://${FLAG_DB_USER}:${FLAG_DB_PASS}@postgres-flags:5432/${FLAG_DB_NAME}
+    depends_on:
+      - postgres-flags
+      - auth-service # Garante que o auth suba antes (opcional, mas bom para organização)
+    networks:
+      - togglemaster-network
+
+  postgres-flags:
+    image: postgres:15-alpine
+    container_name: postgres-flags
+    environment:
+      POSTGRES_USER: ${FLAG_DB_USER}
+      POSTGRES_PASSWORD: ${FLAG_DB_PASS}
+      POSTGRES_DB: ${FLAG_DB_NAME}
+    ports:
+      - "${FLAG_DB_EXT_PORT}:5432"
+    volumes:
+      # Caminho relativo à raiz para o script de init
+      - ./flag-service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - flags_db_data:/var/lib/postgresql/data
+    networks:
+      - togglemaster-network
+
+# ==========================================
+  # TARGETING SERVICE (Python) + Banco
+  # ==========================================
+  targeting-service:
+    container_name: targeting-service
+    build: ./targeting-service
+    ports:
+      - "${TARGET_APP_PORT}:8003"
+    environment:
+      - PORT=8003
+      # Comunicação Interna: Chama o auth-service pelo nome do container
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      # Conecta no seu próprio banco dedicado
+      - DATABASE_URL=postgres://${TARGET_DB_USER}:${TARGET_DB_PASS}@postgres-targeting:5432/${TARGET_DB_NAME}
+    depends_on:
+      - postgres-targeting
+      - auth-service
+    networks:
+      - togglemaster-network
+
+  postgres-targeting:
+    image: postgres:15-alpine
+    container_name: postgres-targeting
+    environment:
+      POSTGRES_USER: ${TARGET_DB_USER}
+      POSTGRES_PASSWORD: ${TARGET_DB_PASS}
+      POSTGRES_DB: ${TARGET_DB_NAME}
+    ports:
+      - "${TARGET_DB_EXT_PORT}:5432"
+    volumes:
+      - ./targeting-service/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - targeting_db_data:/var/lib/postgresql/data
+    networks:
+      - togglemaster-network
+
+  # ==========================================
+  # REDIS (Cache Compartilhado)
+  # ==========================================
+  redis-cache:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    networks:
+      - togglemaster-network
+
+  # ==========================================
+  # EVALUATION SERVICE (Go - Hot Path)
+  # ==========================================
+  evaluation-service:
+    container_name: evaluation-service
+    build: ./evaluation-service
+    ports:
+      - "${EVAL_APP_PORT}:8004"
+    environment:
+      - PORT=8004
+      - REDIS_URL=${EVAL_REDIS_URL}
+      # Conecta nos outros microsserviços
+      - FLAG_SERVICE_URL=http://flag-service:8002
+      - TARGETING_SERVICE_URL=http://targeting-service:8003
+      - SERVICE_API_KEY=${EVAL_SERVICE_API_KEY}
+      # Configuração AWS SQS
+      - AWS_SQS_URL=${AWS_SQS_URL}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      - redis-cache
+      - flag-service
+      - targeting-service
+    networks:
+      - togglemaster-network
+
+  # ==========================================
+  # ANALYTICS SERVICE (Worker Consumidor)
+  # ==========================================
+  analytics-service:
+    container_name: analytics-service
+    build: ./analytics-service
+    ports:
+      - "${ANALYTICS_APP_PORT}:8005"
+    environment:
+      - PORT=8005
+      - AWS_SQS_URL=${ANALYTICS_SQS_URL}
+      - AWS_DYNAMODB_TABLE=${ANALYTICS_DYNAMO_TABLE}
+      # Reutiliza as credenciais globais da AWS definidas no .env
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      # Necessário se usar credenciais temporárias (AWS Academy):
+      #- AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    networks:
+      - togglemaster-network
+
+# ==========================================
+# Volumes e Redes
+# ==========================================
+volumes:
+  auth_db_data:
+  flags_db_data:
+  targeting_db_data:
+
+networks:
+  togglemaster-network:
+    driver: bridge

@@ -1,0 +1,9 @@
+.git
+.env
+bin/
+*.md
+docker-compose.yml
+.idea
+.vscode
+__pycache__/
+*.pyc

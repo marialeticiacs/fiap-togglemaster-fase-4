@@ -1,0 +1,19 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: analytics-scaler
+  namespace: togglemaster
+spec:
+  scaleTargetRef:
+    name: analytics-service # Aponta para o Deployment acima
+  minReplicaCount: 1 # (Ou 0, se quiser desligar total quando a fila esvaziar)
+  maxReplicaCount: 10 # Limite para não estourar a conta
+  pollingInterval: 30 # Checa o SQS a cada 30s
+  cooldownPeriod:  300 # Espera 5min antes de fazer scale down
+  triggers:
+  - type: aws-sqs-queue
+    metadata:
+      queueURL: https://sqs.us-east-2.amazonaws.com/236604670467/analytics-queue
+      queueLength: "5" # Alvo: 5 mensagens na fila por Pod. Se tiver 50 msg, sobe 10 pods.
+      awsRegion: "us-east-2"
+      # Se usar IRSA (Identity), adicione: identityOwner: pod
