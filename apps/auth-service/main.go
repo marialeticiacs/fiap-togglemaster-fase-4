@@ -81,5 +81,3 @@ func connectDB(databaseURL string) (*sql.DB, error) {
 	log.Println("Conectado ao PostgreSQL com sucesso!")
 	return db, nil
 }
-
-// Teste de disparo do pipeline fase 3
