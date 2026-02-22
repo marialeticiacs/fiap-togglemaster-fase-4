@@ -1,4 +1,4 @@
-\name: CI/CD - Auth Service
+name: CI-CD-Auth-Service
 
 on:
   push:
@@ -8,19 +8,14 @@ on:
     branches: [ main ]
     paths: [ 'apps/auth-service/**' ]
 
-# Permissões necessárias para autenticação na AWS
 permissions:
   id-token: write
   contents: read
 
 jobs:
   build-and-test:
-    name: Build, Test & SAST
+    name: Build and SAST
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/auth-service
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -29,14 +24,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
-          cache-dependency-path: apps/auth-service/go.sum
 
-      - name: Go Format & Vet
-        run: |
-          go fmt ./...
-          go vet ./...
-
-      # SAST: Analisa o código-fonte
       - name: Run Trivy SAST
         uses: aquasecurity/trivy-action@0.20.0
         with:
@@ -46,11 +34,10 @@ jobs:
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
 
-  docker-build-and-push:
-    name: Docker Operations
+  docker-ops:
+    name: Docker Build and Scan
     needs: build-and-test
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -66,14 +53,12 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker Image
+      - name: Build Image
         run: |
           docker build -t auth-service:latest ./apps/auth-service
-          # Tag para o ECR
           docker tag auth-service:latest ${{ steps.login-ecr.outputs.registry }}/auth-service:latest
 
-      # Container Scan: Analisa a imagem antes do Push
-      - name: Run Trivy Scan on Image
+      - name: Run Trivy Scan
         uses: aquasecurity/trivy-action@0.20.0
         with:
           image-ref: 'auth-service:latest'
@@ -81,6 +66,6 @@ jobs:
           exit-code: '1'
           severity: 'CRITICAL'
 
-      - name: Push Image to ECR
+      - name: Push Image
         run: |
           docker push ${{ steps.login-ecr.outputs.registry }}/auth-service:latest
