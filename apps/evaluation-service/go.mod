@@ -1,6 +1,6 @@
 module evaluation-service
 
-go 1.21
+go 1.24.0
 
 require (
 	github.com/aws/aws-sdk-go v1.51.10
@@ -15,5 +15,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/onsi/gomega v1.27.6 // indirect
 	golang.org/x/net v0.21.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 )
