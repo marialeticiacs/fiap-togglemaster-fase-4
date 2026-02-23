@@ -57,7 +57,7 @@ spec:
               name: evaluation-cache
               key: REDIS_PORT
         - name: REDIS_URL
-          value: "rediss://$(REDIS_HOST):$(REDIS_PORT)"
+          value: "redis://$(REDIS_HOST):$(REDIS_PORT)"
 
         - name: AWS_REGION
           value: "us-east-2"
