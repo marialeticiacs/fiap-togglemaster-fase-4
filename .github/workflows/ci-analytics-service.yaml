@@ -3,18 +3,22 @@ on:
   push:
     branches: [ main ]
     paths: [ 'apps/analytics-service/**' ]
+
 permissions:
   id-token: write
-  contents: read
+  contents: write
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          
       - name: Trivy SAST
         uses: aquasecurity/trivy-action@0.20.0
         with:
@@ -22,24 +26,43 @@ jobs:
           scan-ref: './apps/analytics-service'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
+          
       - name: AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
+          
       - name: Login ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+        
       - name: Build & Tag
         run: |
-          docker build -t analytics-service:latest ./apps/analytics-service
-          docker tag analytics-service:latest ${{ steps.login-ecr.outputs.registry }}/analytics-service:latest
+          docker build -t analytics-service:${{ github.sha }} ./apps/analytics-service
+          docker tag analytics-service:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/analytics-service:${{ github.sha }}
+          
+      # Lendo a tag gerada pelo hash
       - name: Trivy Image Scan
         uses: aquasecurity/trivy-action@0.20.0
         with:
-          image-ref: 'analytics-service:latest'
+          image-ref: 'analytics-service:${{ github.sha }}'
           exit-code: '1'
           severity: 'CRITICAL'
+          
+      # Enviando pro ECR com a tag de commit
       - name: Push Image
-        run: docker push ${{ steps.login-ecr.outputs.registry }}/analytics-service:latest
+        run: docker push ${{ steps.login-ecr.outputs.registry }}/analytics-service:${{ github.sha }}
+
+      - name: Update GitOps Repo (ArgoCD)
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          
+          # Confirme se o caminho do seu arquivo deployment.yaml é exatamente esse abaixo:
+          sed -i -E "s|(image: .*/analytics-service:).*|\1${{ github.sha }}|g" k8s/services/analytics/analytics-deployment.yaml
+          
+          git add k8s/services/analytics/analytics-deployment.yaml
+          git commit -m "GitOps: atualizando tag do analytics-service para ${{ github.sha }}"
+          git push
