@@ -80,9 +80,10 @@ jobs:
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
           
-          # Troca a tag da imagem no arquivo deployment.yaml pelo hash do commit atual
+          # Atualiza a tag no arquivo
           sed -i -E "s|(image: .*/auth-service:).*|\1${{ github.sha }}|g" k8s/services/auth/auth-deployment.yaml
           
           git add k8s/services/auth/auth-deployment.yaml
           git commit -m "GitOps: atualizando tag do auth-service para ${{ github.sha }}"
+          git pull --rebase origin main
           git push

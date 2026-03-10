@@ -61,9 +61,10 @@ jobs:
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
           
-          # Confirme se o caminho do seu arquivo deployment.yaml é exatamente esse abaixo:
+          # Atualiza a tag no arquivo
           sed -i -E "s|(image: .*/evaluation-service:).*|\1${{ github.sha }}|g" k8s/services/evaluation/evaluation-deployment.yaml
           
           git add k8s/services/evaluation/evaluation-deployment.yaml
           git commit -m "GitOps: atualizando tag do evaluation-service para ${{ github.sha }}"
+          git pull --rebase origin main
           git push
