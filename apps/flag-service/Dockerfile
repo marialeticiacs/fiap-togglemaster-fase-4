@@ -2,7 +2,7 @@
 # Estágio 1: Builder
 # Instala dependências e compila pacotes necessários
 # ----------------------------
-FROM python:3.12-slim AS builder
+FROM python:3.6-alpine AS builder
 
 WORKDIR /app
 
