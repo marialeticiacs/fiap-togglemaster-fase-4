@@ -17,17 +17,14 @@ spec:
     spec:
       containers:
       - name: analytics-service
-        # Certifica-te que o ID da conta AWS (236604670467) é o teu atual
         image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/analytics-service:d44252bf28fafb34c9c0bcd8dcb112218d8354f9
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
         env:
-        # Nome da tabela criada no databases.tf do Terraform
         - name: DYNAMODB_TABLE
           value: "ToggleMasterAnalytics"
         
-        # URL da fila SQS (confirma o ID da conta na URL)
         - name: SQS_QUEUE_URL
           value: "https://sqs.us-east-2.amazonaws.com/236604670467/analytics-queue"
         
