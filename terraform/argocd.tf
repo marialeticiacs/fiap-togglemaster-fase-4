@@ -6,8 +6,10 @@ resource "helm_release" "argocd" {
   create_namespace = true
   version          = "5.51.6" 
 
-  set {
-    name  = "server.service.type"
-    value = "ClusterIP"
-  }
+  set = [
+    {
+      name  = "server.service.type"
+      value = "ClusterIP"
+    }
+  ]
 }
