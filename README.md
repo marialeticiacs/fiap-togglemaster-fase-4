@@ -1,5 +1,7 @@
 # ToggleMaster Fase 3
 
+Projeto desenvolvido para o Tech Challenge da Fase 3 da pós-graduação em DevOps e Arquitetura Cloud da FIAP.
+
 Este projeto é uma arquitetura de microsserviços para gerenciamento de recursos de feature flags, autenticação, avaliação, analytics e targeting, utilizando Docker, Kubernetes e Terraform para infraestrutura.
 
 ## Estrutura do Projeto
@@ -44,7 +46,3 @@ Cada serviço possui um README próprio na respectiva pasta, detalhando endpoint
 
 - Os scripts SQL em `db/` inicializam os bancos de dados.
 - O projeto está preparado para integração com ArgoCD.
-
-## Contato
-
-Dúvidas ou sugestões? Entre em contato com o time de arquitetura cloud.
