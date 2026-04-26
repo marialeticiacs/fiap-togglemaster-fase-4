@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.3.0"
 
   backend "s3" {
-    bucket = "togglemaster-terraform-state-fase-3"
+    bucket = "togglemaster-terraform-state-fase-3" # (Dica: depois você pode criar um bucket novo para a fase-4 se quiser isolar os projetos)
     key    = "state/terraform.tfstate"
     region = "us-east-2" 
   }
@@ -34,12 +34,12 @@ provider "aws" {
 # --- CONFIGURAÇÃO DO HELM (ARGOCD) ---
 provider "helm" {
   kubernetes {
-    host                   = aws_eks_cluster.cluster.endpoint
-    cluster_ca_certificate = base64decode(aws_eks_cluster.cluster.certificate_authority[0].data)
+    host                   = module.cluster.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.cluster.cluster_certificate_authority_data)
 
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
-      args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.cluster.name]
+      args        = ["eks", "get-token", "--cluster-name", module.cluster.cluster_name]
       command     = "aws"
     }
   }

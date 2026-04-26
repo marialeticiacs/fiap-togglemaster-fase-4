@@ -2,3 +2,5 @@ Flask==3.0.0
 gunicorn==22.0.0
 python-dotenv==0.21.0
 boto3==1.26.50
+opentelemetry-distro
+opentelemetry-exporter-otlp

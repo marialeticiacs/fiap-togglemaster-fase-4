@@ -1,6 +1,6 @@
-# ToggleMaster Fase 3
+# ToggleMaster Fase 
 
-Projeto desenvolvido para o Tech Challenge da Fase 3 da pós-graduação em DevOps e Arquitetura Cloud da FIAP.
+Projeto desenvolvido para o Tech Challenge da Fase 4 da pós-graduação em DevOps e Arquitetura Cloud da FIAP.
 
 Este projeto é uma arquitetura de microsserviços para gerenciamento de recursos de feature flags, autenticação, avaliação, analytics e targeting, utilizando Docker, Kubernetes e Terraform para infraestrutura.
 
