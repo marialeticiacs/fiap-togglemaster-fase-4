@@ -69,6 +69,13 @@ spec:
           value: "http://flag-service"
         - name: TARGETING_SERVICE_URL
           value: "http://targeting-service"
+        
+        - name: OTEL_SERVICE_NAME
+          value: "evaluation-service"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4317"
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "grpc"
 
         resources:
           requests:

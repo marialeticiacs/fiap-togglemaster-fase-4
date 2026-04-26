@@ -68,4 +68,4 @@ EXPOSE 8002
 # --bind define o host/porta
 # --workers define quantos processos (geralmente 2-4 para containers pequenos)
 # app:app refere-se ao arquivo app.py e a instância Flask 'app' dentro dele
-CMD ["gunicorn", "--bind", "0.0.0.0:8002", "--workers", "2", "app:app"]
+CMD ["opentelemetry-instrument", "gunicorn", "--bind", "0.0.0.0:8002", "--workers", "2", "app:app"]

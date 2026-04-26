@@ -53,6 +53,13 @@ spec:
             secretKeyRef:
               name: auth-db
               key: MASTER_KEY
+        
+        - name: OTEL_SERVICE_NAME
+          value: "auth-service"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4317"
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "grpc"
 
         resources:
           requests:

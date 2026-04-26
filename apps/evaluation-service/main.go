@@ -12,6 +12,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
+
+	// Imports do OpenTelemetry
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
 // Contexto global para o Redis
@@ -27,8 +36,50 @@ type App struct {
 	TargetingServiceURL string
 }
 
+// Inicializa o provedor de Traces do OpenTelemetry
+func initTracer() (*sdktrace.TracerProvider, error) {
+	ctx := context.Background()
+
+	exporter, err := otlptracegrpc.New(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceNameKey.String("evaluation-service"),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+
+	return tp, nil
+}
+
 func main() {
 	_ = godotenv.Load() // Carrega .env para dev local
+
+	// --- Inicialização do OpenTelemetry ---
+	tp, err := initTracer()
+	if err != nil {
+		log.Printf("Aviso: Falha ao inicializar OpenTelemetry: %v", err)
+	} else {
+		defer func() {
+			if err := tp.Shutdown(context.Background()); err != nil {
+				log.Printf("Erro ao desligar TracerProvider: %v", err)
+			}
+		}()
+		log.Println("OpenTelemetry inicializado com sucesso!")
+	}
 
 	// --- Configuração ---
 	port := os.Getenv("PORT")
@@ -85,9 +136,11 @@ func main() {
 		log.Println("Cliente SQS inicializado com sucesso.")
 	}
 
-	// Cliente HTTP (com timeout)
+	// Cliente HTTP (com timeout E instrumentação OpenTelemetry!)
+	// Esta linha é crucial para propagar o Trace para os outros serviços
 	httpClient := &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout:   5 * time.Second,
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
 
 	// Cria a instância da App
@@ -105,8 +158,11 @@ func main() {
 	mux.HandleFunc("/health", app.healthHandler)
 	mux.HandleFunc("/evaluate", app.evaluationHandler)
 
+	// NOVO: Embrulhamos o Mux com o handler do OpenTelemetry
+	handler := otelhttp.NewHandler(mux, "evaluation-service-http")
+
 	log.Printf("Serviço de Avaliação (Go) rodando na porta %s", port)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	if err := http.ListenAndServe(":"+port, handler); err != nil {
 		log.Fatal(err)
 	}
 }
