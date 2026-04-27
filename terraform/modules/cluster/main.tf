@@ -92,7 +92,9 @@ resource "helm_release" "argocd" {
   namespace        = "argocd"
   create_namespace = true
   version          = "5.51.6"
+  
+  timeout          = "600" 
+  wait             = true
 
-  # Esta trava garante que o ArgoCD só será instalado quando as máquinas existirem!
   depends_on = [aws_eks_node_group.node_group]
 }

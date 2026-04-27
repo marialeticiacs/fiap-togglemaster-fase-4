@@ -5,9 +5,8 @@ resource "helm_release" "prometheus_grafana" {
   chart            = "kube-prometheus-stack"
   namespace        = "observability"
   create_namespace = true
-  version          = "56.6.2" # Versão estável
+  version          = "56.6.2"
 
-  # Desabilita alertas padrão muito ruidosos para o Tech Challenge
   set {
     name  = "defaultRules.create"
     value = "false"
@@ -22,14 +21,15 @@ resource "helm_release" "loki" {
   namespace  = "observability"
   version    = "2.9.11"
 
-  # Configura o Loki para enviar os logs para o Grafana que acabamos de instalar
+  depends_on = [helm_release.prometheus_grafana]
+
   set {
     name  = "grafana.enabled"
-    value = "false" # Usamos o Grafana do Kube-Prometheus-Stack
+    value = "false"
   }
 }
 
-# Instala o OpenTelemetry Collector (O "Coração" do monitoramento)
+# Instala o OpenTelemetry Collector
 resource "helm_release" "otel_collector" {
   name       = "otel-collector"
   repository = "https://open-telemetry.github.io/opentelemetry-helm-charts"
@@ -37,13 +37,13 @@ resource "helm_release" "otel_collector" {
   namespace  = "observability"
   version    = "0.80.1"
 
-  # Aqui nós configuramos o OTel para receber dados das suas aplicações
-  # e exportar (enviar) os Traces para o Datadog!
+  depends_on = [helm_release.prometheus_grafana]
+
   values = [
     <<-EOT
     mode: daemonset
     image:
-      repository: "otel/opentelemetry-collector-contrib" # Usa a versão com suporte ao Datadog
+      repository: "otel/opentelemetry-collector-contrib"
       tag: "0.95.0"
     config:
       exporters:
