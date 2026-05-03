@@ -1,4 +1,3 @@
-# gatilho: commit para disparar pipeline em 2026-05-03
 # analytics-service (Python)
 
 Este é o serviço de análise (analytics) do projeto ToggleMaster. Ele é um *worker* de backend e não possui uma API pública (exceto `/health`).
