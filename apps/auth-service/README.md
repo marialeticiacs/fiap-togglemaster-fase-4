@@ -1,3 +1,4 @@
+# gatilho: commit para disparar pipeline em 2026-05-03
 # auth-service (Go)
 
 Este é o serviço de autenticação do projeto ToggleMaster. Ele é responsável por criar e validar chaves de API.
