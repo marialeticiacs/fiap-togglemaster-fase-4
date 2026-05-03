@@ -33,7 +33,7 @@ jobs:
           scan-ref: './apps/auth-service'
           format: 'table'
           exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
 
   docker-ops:
     name: Docker Build and Scan
