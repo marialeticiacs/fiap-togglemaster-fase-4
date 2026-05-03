@@ -27,7 +27,7 @@ jobs:
           cache-dependency-path: apps/auth-service/go.sum
 
       - name: Run Trivy SAST
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: './apps/auth-service'
@@ -62,7 +62,7 @@ jobs:
 
       # Escaneando a imagem com a tag correta
       - name: Run Trivy Scan
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: 'auth-service:${{ github.sha }}'
           format: 'table'

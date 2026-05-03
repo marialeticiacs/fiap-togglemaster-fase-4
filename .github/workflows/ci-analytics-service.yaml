@@ -20,7 +20,7 @@ jobs:
           python-version: '3.12'
           
       - name: Trivy SAST
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: './apps/analytics-service'
@@ -45,7 +45,7 @@ jobs:
           
       # Lendo a tag gerada pelo hash
       - name: Trivy Image Scan
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: 'analytics-service:${{ github.sha }}'
           exit-code: '1'
