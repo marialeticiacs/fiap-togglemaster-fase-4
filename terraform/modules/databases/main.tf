@@ -28,21 +28,25 @@ resource "aws_security_group" "db_sg" {
 
 # Subnet Group para o RDS
 resource "aws_db_subnet_group" "rds_sg" {
-  name       = "${var.project_name}-rds-subnet-group"
-  subnet_ids = var.private_subnet_ids
+  name        = "${var.project_name}-rds-subnet-group"
+  subnet_ids  = var.private_subnet_ids
 }
 
-# Criando os 3 Bancos RDS PostgreSQL (auth, flag, targeting/evaluation)
 resource "aws_db_instance" "postgresql" {
-  count                  = 3
-  identifier             = "${var.project_name}-db-${count.index}"
+  for_each = {
+    auth       = "auth_db"
+    flag       = "flag_db"
+    evaluation = "evaluation_db"
+  }
+
+  identifier             = "${each.key}-db"
   engine                 = "postgres"
   engine_version         = "13"
   instance_class         = "db.t3.micro"
   allocated_storage      = 20
-  db_name                = "togglemasterdb${count.index}"
+  db_name                = each.value   # Nome real do banco (ex: auth_db)
   username               = "postgres"
-  password               = "password123" # Em prod, usar AWS Secrets Manager!
+  password               = "password123" 
   db_subnet_group_name   = aws_db_subnet_group.rds_sg.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   skip_final_snapshot    = true
@@ -50,8 +54,8 @@ resource "aws_db_instance" "postgresql" {
 
 # ElastiCache Redis
 resource "aws_elasticache_subnet_group" "redis_sg" {
-  name       = "${var.project_name}-redis-subnet-group"
-  subnet_ids = var.private_subnet_ids
+  name        = "${var.project_name}-redis-subnet-group"
+  subnet_ids  = var.private_subnet_ids
 }
 
 resource "aws_elasticache_cluster" "redis" {
@@ -78,5 +82,5 @@ resource "aws_dynamodb_table" "analytics" {
 
 # SQS Queue
 resource "aws_sqs_queue" "main_queue" {
-  name = "${var.project_name}-queue"
+  name = "analytics-queue"
 }

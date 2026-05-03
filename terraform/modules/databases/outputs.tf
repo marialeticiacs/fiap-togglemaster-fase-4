@@ -1,11 +1,16 @@
 output "rds_endpoints" {
-  value = aws_db_instance.postgresql[*].endpoint
-}
-
-output "redis_endpoint" {
-  value = aws_elasticache_cluster.redis.cache_nodes[0].address
+  description = "Endpoints de conexão dos bancos RDS"
+  value = {
+    for k, v in aws_db_instance.postgresql : k => v.endpoint
+  }
 }
 
 output "sqs_url" {
-  value = aws_sqs_queue.main_queue.id
+  description = "URL da fila SQS para Analytics"
+  value       = aws_sqs_queue.main_queue.url
+}
+
+output "redis_endpoint" {
+  description = "Endpoint do Redis"
+  value       = aws_elasticache_cluster.redis.cache_nodes[0].address
 }
