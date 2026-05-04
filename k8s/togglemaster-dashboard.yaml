@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: togglemaster-dashboard
+  namespace: observability
+  labels:
+    grafana_dashboard: "1" 
+data:
+  togglemaster-main.json: |-
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "panels": [
+        {
+          "title": "CPU Usage per Node",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [{ "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate) by (node)", "refId": "A" }]
+        },
+        {
+          "title": "HTTP 5xx Errors (Microsserviços)",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [{ "expr": "sum(irate(http_requests_total{status=~\"5..\"}[5m])) by (service)", "refId": "A" }]
+        },
+        {
+          "title": "Real-time Logs (Loki)",
+          "type": "logs",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 8 },
+          "targets": [{ "expr": "{namespace=\"togglemaster\"}", "refId": "A" }]
+        }
+      ],
+      "refresh": "5s",
+      "title": "ToggleMaster Global Health",
+      "uid": "tm-global-01"
+    }
