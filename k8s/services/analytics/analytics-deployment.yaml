@@ -22,10 +22,10 @@ spec:
         ports:
         - containerPort: 5000
         env:
-        - name: DYNAMODB_TABLE
+        - name: AWS_DYNAMODB_TABLE
           value: "togglemaster-analytics"
         
-        - name: SQS_QUEUE_URL
+        - name: AWS_SQS_URL
           value: "https://sqs.us-east-2.amazonaws.com/236604670467/analytics-queue"
         
         - name: AWS_REGION
