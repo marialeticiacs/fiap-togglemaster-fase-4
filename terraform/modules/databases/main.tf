@@ -8,7 +8,7 @@ resource "aws_security_group" "db_sg" {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"] # Acesso apenas interno da VPC
+    cidr_blocks = ["10.0.0.0/16"] # Acesso interno da VPC
   }
 
   ingress {
@@ -36,7 +36,7 @@ resource "aws_db_instance" "postgresql" {
   for_each = {
     auth       = "auth_db"
     flag       = "flag_db"
-    evaluation = "evaluation_db"
+    targeting = "targeting_db"
   }
 
   identifier             = "${each.key}-db"
@@ -44,9 +44,11 @@ resource "aws_db_instance" "postgresql" {
   engine_version         = "13"
   instance_class         = "db.t3.micro"
   allocated_storage      = 20
-  db_name                = each.value   # Nome real do banco (ex: auth_db)
-  username               = "postgres"
-  password               = "password123" 
+  db_name                = each.value
+  
+  username               = "dbadmin"
+  password               = "SenhaForte123!" 
+  
   db_subnet_group_name   = aws_db_subnet_group.rds_sg.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   skip_final_snapshot    = true
