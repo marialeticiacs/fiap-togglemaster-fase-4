@@ -70,8 +70,8 @@ resource "aws_eks_node_group" "node_group" {
   subnet_ids      = var.private_subnet_ids
 
   scaling_config {
-    desired_size = 2
-    max_size     = 3
+    desired_size = 3
+    max_size     = 5
     min_size     = 1
   }
 
@@ -173,4 +173,16 @@ resource "kubernetes_service_account" "analytics_sa" {
   }
 
   depends_on = [aws_eks_node_group.node_group]
+}
+
+resource "aws_eks_addon" "vpc_cni" {
+  cluster_name = aws_eks_cluster.cluster.name
+  addon_name   = "vpc-cni"
+  
+  configuration_values = jsonencode({
+    env = {
+      ENABLE_PREFIX_DELEGATION = "true"
+      WARM_PREFIX_TARGET       = "1"
+    }
+  })
 }
