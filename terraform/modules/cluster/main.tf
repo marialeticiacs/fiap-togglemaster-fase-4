@@ -162,17 +162,24 @@ resource "aws_iam_role_policy_attachment" "analytics_attach" {
   role       = aws_iam_role.analytics_irsa_role.name
 }
 
+# --- Criação do Namespace togglemaster ---
+resource "kubernetes_namespace" "togglemaster" {
+  metadata {
+    name = "togglemaster"
+  }
+}
+
 # --- Criação da ServiceAccount no Kubernetes via Terraform ---
 resource "kubernetes_service_account" "analytics_sa" {
   metadata {
     name      = "analytics-service-account"
-    namespace = "togglemaster"
+    namespace = kubernetes_namespace.togglemaster.metadata[0].name
     annotations = {
       "eks.amazonaws.com/role-arn" = aws_iam_role.analytics_irsa_role.arn
     }
   }
 
-  depends_on = [aws_eks_node_group.node_group]
+  depends_on = [aws_eks_node_group.node_group, kubernetes_namespace.togglemaster]
 }
 
 resource "aws_eks_addon" "vpc_cni" {

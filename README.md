@@ -1,48 +1,57 @@
-# ToggleMaster Fase 4
 
-Projeto desenvolvido para o Tech Challenge da Fase 4 da pós-graduação em DevOps e Arquitetura Cloud da FIAP.
+# ToggleMaster – Fase 4
 
-Este projeto é uma arquitetura de microsserviços para gerenciamento de recursos de feature flags, autenticação, avaliação, analytics e targeting, utilizando Docker, Kubernetes e Terraform para infraestrutura.
+Este repositório corresponde à Fase 4 do Tech Challenge da pós-graduação em DevOps & Arquitetura Cloud (FIAP).
+
+## Visão Geral
+
+O projeto implementa uma arquitetura de microsserviços para gerenciamento de feature flags, autenticação, avaliação, analytics e targeting, utilizando práticas modernas de infraestrutura como código, automação e orquestração em nuvem.
 
 ## Estrutura do Projeto
 
-- **apps/**: Contém os microsserviços.
-  - **analytics-service/**: Serviço de analytics (Python).
-  - **auth-service/**: Serviço de autenticação (Go).
-  - **evaluation-service/**: Serviço de avaliação (Go).
-  - **flag-service/**: Serviço de feature flags (Python).
-  - **targeting-service/**: Serviço de targeting (Python).
-- **k8s/**: Manifests Kubernetes para deploy, secrets, configmaps, ingress e autoscaling.
-- **terraform/**: Infraestrutura como código para AWS (EKS, VPC, IAM, ECR, bancos de dados).
+- **apps/**: Microsserviços principais
+  - `analytics-service/` (Python)
+  - `auth-service/` (Go)
+  - `evaluation-service/` (Go)
+  - `flag-service/` (Python)
+  - `targeting-service/` (Python)
+- **k8s/**: Manifests Kubernetes (deployments, ingress, autoscaling, configmaps, secrets)
+- **terraform/**: Infraestrutura como código para AWS (EKS, VPC, IAM, ECR, bancos de dados)
 
-## Tecnologias Utilizadas
+## Tecnologias e Ferramentas
 
-- **Docker**: Containerização dos microsserviços.
-- **Kubernetes**: Orquestração dos containers e recursos.
-- **Terraform**: Provisionamento de infraestrutura na AWS.
-- **Go & Python**: Linguagens dos microsserviços.
+- **Docker**: Containerização dos microsserviços
+- **Kubernetes (EKS)**: Orquestração e deploy na AWS
+- **Terraform**: Provisionamento automatizado da infraestrutura
+- **Go & Python**: Linguagens dos microsserviços
+- **ArgoCD**: Preparado para GitOps e deploy contínuo
 
 ## Como Executar
 
-1. **Infraestrutura**:
-   - Configure variáveis e providers em `terraform/`.
-   - Execute `terraform init` e `terraform apply` para provisionar recursos.
-2. **Microsserviços**:
-   - Use os arquivos `docker-compose.yml` para rodar localmente.
-   - Para produção, utilize os manifests em `k8s/`.
+1. **Provisionar Infraestrutura**
+   - Configure variáveis em `terraform/`
+   - Execute:
+     ```
+     cd terraform
+     terraform init
+     terraform apply
+     ```
+2. **Build e Deploy dos Serviços**
+   - Para ambiente local: utilize os arquivos `docker-compose.yml`
+   - Para produção: utilize os manifests em `k8s/` para deploy no EKS
 
 ## Fluxo de Deploy
 
-1. Provisionamento AWS com Terraform.
-2. Build e push das imagens Docker.
-3. Deploy no EKS via Kubernetes.
-4. Configuração de ingress, secrets e autoscaling.
+1. Provisionamento AWS via Terraform
+2. Build e push das imagens Docker para o ECR
+3. Deploy dos serviços no EKS via Kubernetes
+4. Configuração de ingress, autoscaling, secrets e configmaps
 
 ## Documentação dos Serviços
 
-Cada serviço possui um README próprio na respectiva pasta, detalhando endpoints, exemplos de uso e dependências.
+Cada microsserviço possui um README próprio detalhando endpoints, exemplos de uso e dependências.
 
 ## Observações
 
-- Os scripts SQL em `db/` inicializam os bancos de dados.
-- O projeto está preparado para integração com ArgoCD.
+- Scripts SQL em `db/` inicializam os bancos de dados.
+- Projeto pronto para integração com ArgoCD (GitOps).
