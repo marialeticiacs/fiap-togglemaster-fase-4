@@ -1,4 +1,3 @@
-
 # ToggleMaster – Fase 4
 
 Este repositório corresponde à Fase 4 do Tech Challenge da pós-graduação em DevOps & Arquitetura Cloud (FIAP).
@@ -55,3 +54,8 @@ Cada microsserviço possui um README próprio detalhando endpoints, exemplos de 
 
 - Scripts SQL em `db/` inicializam os bancos de dados.
 - Projeto pronto para integração com ArgoCD (GitOps).
+
+## Integrantes do Grupo
+
+- Maria Letícia
+- Jeferson Rezk
