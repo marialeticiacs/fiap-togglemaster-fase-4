@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: flag-service
-        image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/flag-service:latest
+        image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/flag-service:6f8ccff9c8c9342c02318b5b7cee52037a344889
         imagePullPolicy: Always
         ports:
         - containerPort: 8002 
@@ -55,6 +55,13 @@ spec:
         
         - name: AUTH_SERVICE_URL
           value: "http://auth-service"
+        
+        - name: OTEL_SERVICE_NAME
+          value: "flag-service"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4317"
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "grpc"
 
         resources:
           requests:

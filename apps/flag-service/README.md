@@ -1,3 +1,4 @@
+# gatilho: commit para disparar pipeline em 2026-05-03
 # flag-service (Python)
 
 Este é o serviço de CRUD (Create, Read, Update, Delete) do projeto ToggleMaster. Ele é responsável por gerenciar as *definições* das feature flags.

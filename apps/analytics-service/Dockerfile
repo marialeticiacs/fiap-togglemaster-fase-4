@@ -60,4 +60,4 @@ EXPOSE 8005
 # Executa com Gunicorn
 # Nota: --workers 1 é recomendado aqui pois o serviço roda uma thread
 # de consumo de fila em background. Múltiplos workers poderiam duplicar o consumo.
-CMD ["gunicorn", "--bind", "0.0.0.0:8005", "--workers", "1", "app:app"]
+CMD ["opentelemetry-instrument", "gunicorn", "--bind", "0.0.0.0:8005", "--workers", "1", "app:app"]

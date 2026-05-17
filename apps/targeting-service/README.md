@@ -1,3 +1,4 @@
+# gatilho: commit para disparar pipeline em 2026-05-03
 # targeting-service (Python)
 
 Este é o serviço de regras de segmentação (targeting) do projeto ToggleMaster. Ele é responsável por gerenciar regras complexas (ex: "50% dos usuários", "usuários do país X") para uma feature flag específica.

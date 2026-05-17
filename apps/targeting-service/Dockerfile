@@ -60,4 +60,4 @@ USER appuser
 EXPOSE 8003
 
 # Executa com Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8003", "--workers", "2", "app:app"]
+CMD ["opentelemetry-instrument", "gunicorn", "--bind", "0.0.0.0:8003", "--workers", "2", "app:app"]

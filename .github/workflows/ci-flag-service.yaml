@@ -3,43 +3,69 @@ on:
   push:
     branches: [ main ]
     paths: [ 'apps/flag-service/**' ]
+
 permissions:
   id-token: write
-  contents: read
+  contents: write
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          
       - name: Trivy SAST
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: './apps/flag-service'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
+          
       - name: AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
+          
       - name: Login ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+        
+      # hash do commit (github.sha)
       - name: Build & Tag
         run: |
-          docker build -t flag-service:latest ./apps/flag-service
-          docker tag flag-service:latest ${{ steps.login-ecr.outputs.registry }}/flag-service:latest
+          docker build -t flag-service:${{ github.sha }} ./apps/flag-service
+          docker tag flag-service:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/flag-service:${{ github.sha }}
+          
+      # Escaneando a imagem com a tag correta
       - name: Trivy Image Scan
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: 'flag-service:latest'
+          image-ref: 'flag-service:${{ github.sha }}'
           exit-code: '1'
           severity: 'CRITICAL'
+          
+      # Enviando a imagem para o ECR com a tag do commit
       - name: Push Image
-        run: docker push ${{ steps.login-ecr.outputs.registry }}/flag-service:latest
+        run: docker push ${{ steps.login-ecr.outputs.registry }}/flag-service:${{ github.sha }}
+
+      # Atualização automática do GitOps para o ArgoCD
+      - name: Update GitOps Repo (ArgoCD)
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          
+          # Atualiza a tag no arquivo
+          sed -i -E "s|(image: .*/flag-service:).*|\1${{ github.sha }}|g" k8s/services/flag/flag-deployment.yaml
+          
+          git add k8s/services/flag/flag-deployment.yaml
+          git commit -m "GitOps: atualizando tag do flag-service para ${{ github.sha }}"
+          git pull --rebase origin main
+          git push

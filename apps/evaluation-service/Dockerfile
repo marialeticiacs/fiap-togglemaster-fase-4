@@ -2,7 +2,7 @@
 # Estágio 1: Builder
 # Compila o binário Go estaticamente
 # ----------------------------
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 # Instala dependências de sistema (necessário para certificados HTTPS da AWS)
 RUN apk add --no-cache git ca-certificates tzdata && update-ca-certificates

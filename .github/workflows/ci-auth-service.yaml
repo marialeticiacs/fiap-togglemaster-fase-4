@@ -10,7 +10,7 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write 
 
 jobs:
   build-and-test:
@@ -27,13 +27,13 @@ jobs:
           cache-dependency-path: apps/auth-service/go.sum
 
       - name: Run Trivy SAST
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: './apps/auth-service'
           format: 'table'
           exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
 
   docker-ops:
     name: Docker Build and Scan
@@ -54,19 +54,36 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      # Hash do Commit
       - name: Build Image
         run: |
-          docker build -t auth-service:latest ./apps/auth-service
-          docker tag auth-service:latest ${{ steps.login-ecr.outputs.registry }}/auth-service:latest
+          docker build -t auth-service:${{ github.sha }} ./apps/auth-service
+          docker tag auth-service:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/auth-service:${{ github.sha }}
 
+      # Escaneando a imagem com a tag correta
       - name: Run Trivy Scan
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: 'auth-service:latest'
+          image-ref: 'auth-service:${{ github.sha }}'
           format: 'table'
           exit-code: '1'
           severity: 'CRITICAL'
 
+      # Push da imagem com a tag correta
       - name: Push Image
         run: |
-          docker push ${{ steps.login-ecr.outputs.registry }}/auth-service:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/auth-service:${{ github.sha }}
+
+      # Atualização automática do GitOps para o ArgoCD
+      - name: Update GitOps Repo (ArgoCD)
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          
+          # Atualiza a tag no arquivo
+          sed -i -E "s|(image: .*/auth-service:).*|\1${{ github.sha }}|g" k8s/services/auth/auth-deployment.yaml
+          
+          git add k8s/services/auth/auth-deployment.yaml
+          git commit -m "GitOps: atualizando tag do auth-service para ${{ github.sha }}"
+          git pull --rebase origin main
+          git push

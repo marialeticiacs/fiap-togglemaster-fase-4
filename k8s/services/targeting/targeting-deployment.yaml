@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: targeting-service
-        image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/targeting-service:latest
+        image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/targeting-service:d74b16b8f836657154ed653aa9b229d97bb29908
         imagePullPolicy: Always
         ports:
         - containerPort: 8003
@@ -55,6 +55,13 @@ spec:
         
         - name: AUTH_SERVICE_URL
           value: "http://auth-service"
+        
+        - name: OTEL_SERVICE_NAME
+          value: "targeting-service"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4317"
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "grpc"
 
         # Recursos
         resources:

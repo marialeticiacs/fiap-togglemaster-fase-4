@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: evaluation-service
-        image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/evaluation-service:latest
+        image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/evaluation-service:c3c67ab6513c0e89ba7e8376a9c9ea8bacdc2514
         imagePullPolicy: Always
         
         ports:
@@ -69,6 +69,13 @@ spec:
           value: "http://flag-service"
         - name: TARGETING_SERVICE_URL
           value: "http://targeting-service"
+        
+        - name: OTEL_SERVICE_NAME
+          value: "evaluation-service"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4317"
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "grpc"
 
         resources:
           requests:

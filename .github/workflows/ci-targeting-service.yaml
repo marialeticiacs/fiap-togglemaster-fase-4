@@ -3,43 +3,68 @@ on:
   push:
     branches: [ main ]
     paths: [ 'apps/targeting-service/**' ]
+
 permissions:
   id-token: write
-  contents: read
+  contents: write
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          
       - name: Trivy SAST
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: './apps/targeting-service'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
+          
       - name: AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
+          
       - name: Login ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+        
       - name: Build & Tag
         run: |
-          docker build -t targeting-service:latest ./apps/targeting-service
-          docker tag targeting-service:latest ${{ steps.login-ecr.outputs.registry }}/targeting-service:latest
+          docker build -t targeting-service:${{ github.sha }} ./apps/targeting-service
+          docker tag targeting-service:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/targeting-service:${{ github.sha }}
+          
+      # O Trivy agora escaneia a imagem recém-nomeada com o hash
       - name: Trivy Image Scan
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: 'targeting-service:latest'
+          image-ref: 'targeting-service:${{ github.sha }}'
           exit-code: '1'
           severity: 'CRITICAL'
+          
+      # Push pro ECR com o hash do commit
       - name: Push Image
-        run: docker push ${{ steps.login-ecr.outputs.registry }}/targeting-service:latest
+        run: docker push ${{ steps.login-ecr.outputs.registry }}/targeting-service:${{ github.sha }}
+
+      # Atualização do arquivo deployment.yaml para o ArgoCD
+      - name: Update GitOps Repo (ArgoCD)
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          
+          # Atualiza a tag no arquivo
+          sed -i -E "s|(image: .*/targeting-service:).*|\1${{ github.sha }}|g" k8s/services/targeting/targeting-deployment.yaml
+          
+          git add k8s/services/targeting/targeting-deployment.yaml
+          git commit -m "GitOps: atualizando tag do targeting-service para ${{ github.sha }}"
+          git pull --rebase origin main
+          git push
