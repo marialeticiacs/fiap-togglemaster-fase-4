@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: evaluation-service
-        image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/evaluation-service:5ec965067dd5ca2e8ec9b0747f8e8e0d87c73750
+        image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/evaluation-service:c3c67ab6513c0e89ba7e8376a9c9ea8bacdc2514
         imagePullPolicy: Always
         
         ports:
