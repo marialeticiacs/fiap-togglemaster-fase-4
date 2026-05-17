@@ -20,6 +20,8 @@ module "cluster" {
   source             = "./modules/cluster"
   project_name       = "togglemaster"
   private_subnet_ids = module.networking.private_subnet_ids
+  vpc_id             = module.networking.vpc_id
+  region             = "us-east-2"
 
   depends_on = [module.networking]
 }
