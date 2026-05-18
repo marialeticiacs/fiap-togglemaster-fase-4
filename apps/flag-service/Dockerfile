@@ -7,7 +7,6 @@ FROM python:3.12-slim AS builder
 WORKDIR /app
 
 # Instala dependências de sistema necessárias para compilar pacotes Python
-# (build-essential para C/C++, libpq-dev para o driver do PostgreSQL)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
@@ -26,6 +25,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# --- AS DUAS LINHAS MÁGICAS QUE FALTAVAM AQUI: ---
+# O bootstrap lê o seu requirements.txt e instala os interceptadores para o Flask e Psycopg2
+RUN opentelemetry-bootstrap --action=install
+
 # ----------------------------
 # Estágio 2: Runner (Imagem Final)
 # Imagem limpa apenas com o runtime necessário
@@ -35,13 +38,12 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Instala apenas as bibliotecas de sistema runtime necessárias
-# (libpq é necessário para o PostgreSQL funcionar, mas não precisa do gcc aqui)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Copia o ambiente virtual do estágio builder
+# Copia o ambiente virtual do estágio builder (agora com os interceptadores injetados)
 COPY --from=builder /opt/venv /opt/venv
 
 # Define o PATH para usar o Python do ambiente virtual automaticamente
@@ -55,7 +57,7 @@ RUN useradd -m appuser
 # Copia o código da aplicação
 COPY . .
 
-# Ajusta permissões (opcional, mas boa prática)
+# Ajusta permissões
 RUN chown -R appuser:appuser /app
 
 # Muda para o usuário seguro
@@ -64,8 +66,5 @@ USER appuser
 # Expõe a porta 8002 (padrão do flag-service)
 EXPOSE 8002
 
-# Comando de execução usando Gunicorn (Production Server)
-# --bind define o host/porta
-# --workers define quantos processos (geralmente 2-4 para containers pequenos)
-# app:app refere-se ao arquivo app.py e a instância Flask 'app' dentro dele
+# Seu comando original perfeito!
 CMD ["opentelemetry-instrument", "gunicorn", "--bind", "0.0.0.0:8002", "--workers", "2", "app:app"]
