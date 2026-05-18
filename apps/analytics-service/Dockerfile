@@ -24,6 +24,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# --- ADICIONADO: Instala os plugins coletores do ecossistema OpenTelemetry para Python ---
+RUN opentelemetry-bootstrap --action=install
+
 # ----------------------------
 # Estágio 2: Runner (Imagem Final)
 # ----------------------------
@@ -36,7 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Copia o venv do builder
+# Copia o venv do builder (agora com as amarras do OTel 100% configuradas)
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -57,7 +60,6 @@ USER appuser
 # Expõe a porta 8005 (Health Check)
 EXPOSE 8005
 
-# Executa com Gunicorn
-# Nota: --workers 1 é recomendado aqui pois o serviço roda uma thread
-# de consumo de fila em background. Múltiplos workers poderiam duplicar o consumo.
+# Executa com Gunicorn engatado no OpenTelemetry Instrument
+# Mantido com 1 worker por conta da thread de consumo em background mapeada por você!
 CMD ["opentelemetry-instrument", "gunicorn", "--bind", "0.0.0.0:8005", "--workers", "1", "app:app"]
