@@ -21,7 +21,8 @@ spec:
         image: 236604670467.dkr.ecr.us-east-2.amazonaws.com/analytics-service:65062330177e73d377e421c26511f07ed60dbc43
         imagePullPolicy: Always
         ports:
-        - containerPort: 5000
+        - containerPort: 8005
+          name: http
         env:
         - name: AWS_DYNAMODB_TABLE
           value: "togglemaster-analytics"
@@ -32,12 +33,15 @@ spec:
         - name: AWS_REGION
           value: "us-east-2"
         
+        # --- Configurações do OpenTelemetry ---
         - name: OTEL_SERVICE_NAME
           value: "analytics-service"
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4317"
         - name: OTEL_EXPORTER_OTLP_PROTOCOL
           value: "grpc"
+        - name: OTEL_EXPORTER_OTLP_INSECURE
+          value: "true"
 
         resources:
           requests:
@@ -58,4 +62,6 @@ spec:
     app: analytics-service
   ports:
   - port: 80
-    targetPort: 5000
+    targetPort: 8005
+    protocol: TCP
+    name: http
