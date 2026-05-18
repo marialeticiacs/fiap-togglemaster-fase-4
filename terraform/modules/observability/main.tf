@@ -31,26 +31,29 @@ resource "helm_release" "loki" {
 
 # Instala o OpenTelemetry Collector
 resource "helm_release" "otel_collector" {
-  name       = "otel-collector"
-  repository = "https://open-telemetry.github.io/opentelemetry-helm-charts"
-  chart      = "opentelemetry-collector"
-  namespace  = "observability"
-  version    = "0.80.1"
+  name             = "otel-collector"
+  repository       = "https://open-telemetry.github.io/opentelemetry-helm-charts"
+  chart            = "opentelemetry-collector"
+  namespace        = "observability"
+  version          = "0.110.0" 
 
   depends_on = [helm_release.prometheus_grafana]
 
   values = [
     <<-EOT
-    mode: daemonset
+    mode: deployment
+    
+    # OBRIGATÓRIO PARA A VERSÃO 0.110.0:
     image:
       repository: "otel/opentelemetry-collector-contrib"
-      tag: "0.95.0"
+      tag: "0.100.0"
+    
     config:
       exporters:
         datadog:
           api:
-            site: datadoghq.com
-            key: "bba898ca9ad9005e04e7ed325e9afdcd"
+            site: "us5.datadoghq.com"
+            key: "318300c42e161e9fc1a3e8330742d706"
       receivers:
         otlp:
           protocols:
@@ -58,10 +61,13 @@ resource "helm_release" "otel_collector" {
               endpoint: 0.0.0.0:4317
             http:
               endpoint: 0.0.0.0:4318
+      processors:
+        batch: {}
       service:
         pipelines:
           traces:
             receivers: [otlp]
+            processors: [batch]
             exporters: [datadog]
     EOT
   ]
