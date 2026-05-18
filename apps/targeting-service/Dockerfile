@@ -24,6 +24,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# --- ADICIONADO: Garante a instalação dos plugins de instrumentação do Python ---
+RUN opentelemetry-bootstrap --action=install
+
 # ----------------------------
 # Estágio 2: Runner (Imagem Final)
 # Apenas runtime necessário
@@ -38,7 +41,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Copia o venv do estágio anterior
+# Copia o venv do estágio anterior (agora com as bibliotecas do OTel totalmente acopladas)
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -59,5 +62,5 @@ USER appuser
 # Expõe a porta 8003 (padrão do targeting-service)
 EXPOSE 8003
 
-# Executa com Gunicorn
+# Executa com Gunicorn engatado no OpenTelemetry Instrument
 CMD ["opentelemetry-instrument", "gunicorn", "--bind", "0.0.0.0:8003", "--workers", "2", "app:app"]
