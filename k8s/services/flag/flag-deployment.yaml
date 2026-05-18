@@ -19,10 +19,6 @@ spec:
     metadata:
       labels:
         app: flag-service
-      annotations:
-        # ATIVADORES DA INSTRUMENTAÇÃO AUTOMÁTICA DO PYTHON:
-        instrumentation.opentelemetry.io/inject-python: "true"
-        instrumentation.opentelemetry.io/inject-sdk: "true"
     spec:
       containers:
       - name: flag-service
@@ -31,6 +27,15 @@ spec:
         ports:
         - containerPort: 8002 
           name: http
+        
+        # --- ENVELOPAMENTO DA INSTRUMENTAÇÃO NATIVA DO PYTHON ---
+        command: ["opentelemetry-instrument"]
+        args: [
+          "--traces_exporter", "otlp",
+          "--metrics_exporter", "none",
+          "--logs_exporter", "none",
+          "gunicorn", "--bind", "0.0.0.0:8002", "app:app", "--workers", "2"
+        ]
         
         env:
         # --- Variáveis Base (Vêm do Secret) ---
@@ -66,6 +71,9 @@ spec:
           value: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4317"
         - name: OTEL_EXPORTER_OTLP_PROTOCOL
           value: "grpc"
+        # Insecure necessário para o agente gRPC Python conversar sem TLS interno
+        - name: OTEL_EXPORTER_OTLP_INSECURE
+          value: "true"
 
         resources:
           requests:
