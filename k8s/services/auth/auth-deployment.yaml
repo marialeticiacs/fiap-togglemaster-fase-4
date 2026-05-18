@@ -54,12 +54,19 @@ spec:
               name: auth-db
               key: MASTER_KEY
         
+        # --- Configurações Corrigidas de Telemetria e Tags ---
+        - name: DD_ENV
+          value: "production"
         - name: OTEL_SERVICE_NAME
           value: "auth-service"
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "deployment.environment=production,env=production"
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: "http://otel-collector-opentelemetry-collector.observability.svc.cluster.local:4317"
         - name: OTEL_EXPORTER_OTLP_PROTOCOL
           value: "grpc"
+        - name: OTEL_EXPORTER_OTLP_INSECURE
+          value: "true" # <--- OBRIGATÓRIO PARA O GO FALAR COM O COLLECTOR EM HTTP
 
         resources:
           requests:
