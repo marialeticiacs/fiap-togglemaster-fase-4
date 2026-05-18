@@ -19,6 +19,10 @@ spec:
     metadata:
       labels:
         app: flag-service
+      annotations:
+        # ATIVADORES DA INSTRUMENTAÇÃO AUTOMÁTICA DO PYTHON:
+        instrumentation.opentelemetry.io/inject-python: "true"
+        instrumentation.opentelemetry.io/inject-sdk: "true"
     spec:
       containers:
       - name: flag-service
