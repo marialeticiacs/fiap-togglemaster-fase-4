@@ -1,3 +1,7 @@
+// testErrorHandler força um erro 500 para testes
+func (a *App) testErrorHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "Erro interno forçado para teste", http.StatusInternalServerError)
+}
 package main
 
 import (
