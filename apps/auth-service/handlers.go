@@ -1,7 +1,3 @@
-// testErrorHandler força um erro 500 para testes
-func (a *App) testErrorHandler(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "Erro interno forçado para teste", http.StatusInternalServerError)
-}
 package main
 
 import (
@@ -22,6 +18,11 @@ type CreateKeyResponse struct {
 	Name    string `json:"name"`
 	Key     string `json:"key"` // A chave em texto plano é retornada APENAS uma vez
 	Message string `json:"message"`
+}
+
+// testErrorHandler força um erro 500 para testes
+func (a *App) testErrorHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "Erro interno forçado para teste", http.StatusInternalServerError)
 }
 
 // healthHandler é um simples endpoint de verificação de saúde
