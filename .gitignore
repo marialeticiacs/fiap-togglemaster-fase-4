@@ -1,3 +1,5 @@
+terraform.tfstate
+terraform/metricas_reais.txt
 terraform/.terraform/providers/registry.terraform.io/hashicorp/helm/2.17.0/windows_amd64/terraform-provider-helm_v2.17.0_x5.exe
 terraform/.terraform/modules/modules.json
 terraform/.terraform/providers/registry.terraform.io/hashicorp/helm/2.17.0/windows_amd64/LICENSE.txt

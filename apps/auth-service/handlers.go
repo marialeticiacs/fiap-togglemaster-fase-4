@@ -20,6 +20,11 @@ type CreateKeyResponse struct {
 	Message string `json:"message"`
 }
 
+// testErrorHandler força um erro 500 para testes
+func (a *App) testErrorHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "Erro interno forçado para teste", http.StatusInternalServerError)
+}
+
 // healthHandler é um simples endpoint de verificação de saúde
 func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)

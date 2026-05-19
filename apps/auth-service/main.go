@@ -108,6 +108,7 @@ func main() {
 
 	mux.HandleFunc("/health", app.healthHandler)
 	mux.HandleFunc("/validate", app.validateKeyHandler)
+	mux.HandleFunc("/test-error", app.testErrorHandler)
 
 	// Rotas de administração (proteção por Master Key)
 	mux.Handle("/admin/keys",
